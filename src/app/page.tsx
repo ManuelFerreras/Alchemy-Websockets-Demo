@@ -2,45 +2,59 @@
 import { useEffect, useState } from 'react'
 import styles from './page.module.css'
 import { ethers } from 'ethers';
+import { AnkrProvider } from '@ankr.com/ankr.js';
 
 export default function Home() {
   const [balance, setBalance] = useState('')
   const [updates, setUpdates] = useState(0)
 
   useEffect(() => {
-    const socket = new WebSocket(
-      `${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
-    )
+    const ankrFetch = async () => {
+      const provider = new AnkrProvider(process.env.NEXT_PUBLIC_ALCHEMY_KEY || '');
 
-    socket.onopen = () => {
-      console.debug('connected')
-      socket.send(
-        JSON.stringify({
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'eth_getBalance',
-          params: ['0xee6be79f80c26ce956f845ed8e71b0c65f2c7a4d'],
-        })
-      )
+      const balances = await provider.getNFTsByOwner({
+        blockchain: 'eth',
+        walletAddress: '0x0E11A192d574b342C51be9e306694C41547185DD',
+      });
+
+      console.debug(balances);
     }
 
-    socket.onmessage = (event) => {
-      console.debug(event.data)
+    ankrFetch();
 
-      const data = JSON.parse(event.data)
-      const balance = data?.result
+    // const socket = new WebSocket(
+    //   `${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`
+    // )
 
-      setBalance(ethers.formatEther(balance))
-      setUpdates(updates + 1)
-    }
+    // socket.onopen = () => {
+    //   console.debug('connected')
+    //   socket.send(
+    //     JSON.stringify({
+    //       jsonrpc: '2.0',
+    //       id: 1,
+    //       method: 'eth_getBalance',
+    //       params: ['0xee6be79f80c26ce956f845ed8e71b0c65f2c7a4d'],
+    //     })
+    //   )
+    // }
 
-    socket.onclose = () => {
-      console.debug('disconnected')
-    }
+    // socket.onmessage = (event) => {
+    //   console.debug(event.data)
 
-    return () => {
-      socket.close()
-    }
+    //   const data = JSON.parse(event.data)
+    //   const balance = data?.result
+
+    //   setBalance(ethers.formatEther(balance))
+    //   setUpdates(updates + 1)
+    // }
+
+    // socket.onclose = () => {
+    //   console.debug('disconnected')
+    // }
+
+    // return () => {
+    //   socket.close()
+    // }
   }, [])
 
   return (
